@@ -24,3 +24,5 @@ pydantic>=2.4.0
 # finance-scrapers>=0.1.0
 # llama-index-mlx>=0.1.0 
 # Updated in commit 8 - 2025-04-04 17:44:48
+
+# Updated in commit 16 - 2025-04-04 17:44:49
