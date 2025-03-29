@@ -1,0 +1,387 @@
+# PyPI Package: playwright-page-pool
+
+Version: 0.0.1
+Summary: Handle multiple playwright pages concurrently with ease and speed.
+Author: YeonGyu-Kim (code.yeon.gyu@gmail.com)
+License: MIT
+Project URL: https://github.com/code-yeongyu/playwright-page-pool
+Repository: https://github.com/code-yeongyu/playwright-page-pool
+
+## Description
+
+# Playwright Page Pool 🎭🏊‍♀️
+
+[![PyPI version](https://badge.fury.io/py/playwright-page-pool.svg)](https://badge.fury.io/py/playwright-page-pool)
+[![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
+
+Welcome to Playwright Page Pool! 🎉
+
+This Python module provides a convenient way to manage a pool of Playwright browser pages within a given browser context.
+By leveraging Python's async capabilities, **you can handle multiple pages concurrently with ease and speed**, ensuring your tasks are executed swiftly and efficiently. 🚀
+It allows you to efficiently reuse pages or create new pages on demand, making your web automation tasks a breeze! ✨
+
+## Features 🌟
+
+- **🌐 The best tool for working across multiple pages**
+- 🏊‍♀️ Manages a pool of Playwright browser pages
+- 🔄 Supports reuse of pages for improved performance
+- 🆕 Creates new pages on demand when needed
+- 🚀 Utilizes asynchronous operations for efficient execution
+- 🔒 Ensures thread safety with semaphores and events
+- 🎨 Customizable page initialization with `page_initiator` callback
+- 🎯 Automatic closing of pages when the pool is no longer needed
+
+## Installation 🔧
+
+To start using Playwright Page Pool, simply install it via pip:
+
+```sh
+pip install playwright-page-pool
+```
+
+Make sure you have Playwright installed and set up in your project as well.
+
+## Usage 📝
+
+Here's a quick example of how to use Playwright Page Pool in your code:
+
+```python
+import asyncio
+
+from playwright.async_api import async_playwright
+from playwright_page_pool import PagePool
+
+async def run_example(pool: PagePool) -> None:
+    async with pool.acquire() as page:
+        await page.goto("https://example.com")
+        print(await page.title())
+
+async def main(*args, **kwargs) -> None:
+    async with async_playwright() as p:
+        browser = await p.chromium.launch()
+        context = await browser.new_context()
+
+        async with PagePool(context=context, reuse_pages=True) as pool:
+            run_examples = [run_example(pool) for _ in range(10)]
+            await asyncio.gather(*run_examples)  # 10 tasks are executed concurrently
+
+        await browser.close()
+
+
+if __name__ == "__main__":
+    asyncio.run(main())
+
+```
+
+In this example, we create a PagePool instance with a Playwright browser context. We set reuse_pages=True to enable page reuse for improved performance. We then define a run_example function that acquires a page from the pool using the acquire context manager, navigates to a URL, and prints the page title.
+Finally, we create 10 tasks using run_example and execute them concurrently using asyncio.gather. The PagePool manages the allocation and reuse of pages efficiently.
+
+## Configuration 🛠️
+
+When creating a PagePool instance, you can customize its behavior with the following parameters:
+
+- context: The Playwright browser context associated with the page pool.
+- max_pages: The maximum number of pages that can be opened at once. Defaults to the number of CPU cores.
+- page_initiator: An optional asynchronous callable that is called each time a new page is created. This allows you to perform custom initialization on each page.
+- reuse_pages: Determines whether pages should be reused. If False, a new page is created for each acquisition. Defaults to False. When set to True, it eliminates the overhead of opening and closing pages repeatedly, thereby improving performance.
+
+## Contributing 🤝
+
+Contributions to Playwright Page Pool are welcome! If you find any issues or have suggestions for improvements, please open an issue or submit a pull request on the GitHub repository.
+
+## License 📄
+
+This project is licensed under the MIT License. See the LICENSE file for more details.
+
+
+## Dependencies
+
+- playwright
+- pip
+
+
+## Classifiers
+
+- License :: OSI Approved :: MIT License
+- Programming Language :: Python :: 3
+- Programming Language :: Python :: 3.10
+- Programming Language :: Python :: 3.11
+- Programming Language :: Python :: 3.12
+- Programming Language :: Python :: 3.8
+- Programming Language :: Python :: 3.9
+
+
+## Package Content
+
+
+## File: playwright_page_pool-0.0.1/playwright_page_pool/page_pool.py
+```python
+import asyncio
+import contextlib
+import multiprocessing
+from types import TracebackType
+from typing import Awaitable, Callable, Optional, Tuple
+
+from playwright.async_api import BrowserContext, Page
+
+
+class PagePool:
+    """Manages a pool of Playwright browser pages within a given browser context.
+
+    This class provides functionality to manage a pool of pages, \
+    allowing for either reuse of pages or creation of new pages on demand. \
+    It supports asynchronous operations and can be used as a context manager.
+
+    Attributes
+    ----------
+        context (BrowserContext): The Playwright browser context associated with the page pool.
+        max_pages (Union[int, None]): The maximum number of pages \
+            that can be opened at once. Defaults to the number of CPU cores.
+        page_initiator (Optional[Callable[[Page], Awaitable[None]]]): \
+            An optional asynchronous callable that is called each time a new page is created.
+        reuse_pages (bool): \
+            Determines whether pages should be reused. If False, a new page is created for each acquisition.
+
+    Methods
+    -------
+        acquire: Acquires a page from the pool.
+        close_all: Closes all pages in the pool.
+
+    Usage:
+        async def run_example(pool: PagePool):
+            async with pool.acquire() as page:
+                await page.goto("https://example.com")
+                print(await page.title())
+
+        async def main(*args, **kwargs):
+            async with PagePool(context=your_browser_context, reuse_pages=True) as pool:
+                run_examples = [run_example(pool) for _ in range(10)]
+                await asyncio.gather(*run_examples) # 10 tasks are executed concurrently
+
+    """
+
+    def __init__(
+        self,
+        context: BrowserContext,
+        max_pages: Optional[int] = None,
+        page_initiator: Optional[Callable[[Page], Awaitable[None]]] = None,
+        reuse_pages: bool = False,
+    ) -> None:
+        self.context = context
+        self.max_pages = max_pages if max_pages is not None else multiprocessing.cpu_count()
+        self.page_initiator = page_initiator
+        self.pages: list[Tuple[Page, asyncio.Event]] = []
+        self.lock = asyncio.Semaphore(self.max_pages)
+        self.reuse_pages = reuse_pages
+        self.acquire = self._acquire_by_reuse if reuse_pages else self._acquire_by_opening_page
+
+    async def close_all(self) -> None:
+        if self.reuse_pages:
+            await asyncio.gather(*(page.close() for page, _ in self.pages))
+            self.pages.clear()
+
+    @contextlib.asynccontextmanager
+    async def _acquire_by_reuse(self):
+        await self.lock.acquire()
+        try:
+            # Try to find an available page
+            for page, event in self.pages:
+                if event.is_set():
+                    event.clear()
+                    yield page
+                    event.set()
+                    return
+
+            # No available page, create a new one if under max_pages limit
+            if len(self.pages) < self.max_pages:
+                page = await self.context.new_page()
+                if self.page_initiator:
+                    await self.page_initiator(page)
+                event = asyncio.Event()
+                self.pages.append((page, event))
+                yield page
+                event.set()
+            else:
+                # Wait for an available page
+                page, event = self.pages[0]
+                await event.wait()
+                event.clear()
+                yield page
+                event.set()
+        finally:
+            self.lock.release()
+
+    @contextlib.asynccontextmanager
+    async def _acquire_by_opening_page(self):
+        await self.lock.acquire()
+        try:
+            # Create a new page
+            page = await self.context.new_page()
+            if self.page_initiator:
+                await self.page_initiator(page)
+            yield page
+        finally:
+            # Close the page after use
+            await page.close()
+            self.lock.release()
+
+    async def __aenter__(self):
+        return self
+
+    async def __aexit__(
+        self,
+        exc_type: Optional[type],
+        exc: Optional[BaseException],
+        tb: Optional[TracebackType],
+    ) -> None:
+        await self.close_all()
+
+```
+
+
+## File: playwright_page_pool-0.0.1/playwright_page_pool/__init__.py
+```python
+from .page_pool import PagePool as PagePool
+
+```
+
+
+## Metadata File: playwright_page_pool-0.0.1/README.md
+```
+# Playwright Page Pool 🎭🏊‍♀️
+
+[![PyPI version](https://badge.fury.io/py/playwright-page-pool.svg)](https://badge.fury.io/py/playwright-page-pool)
+[![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
+
+Welcome to Playwright Page Pool! 🎉
+
+This Python module provides a convenient way to manage a pool of Playwright browser pages within a given browser context.
+By leveraging Python's async capabilities, **you can handle multiple pages concurrently with ease and speed**, ensuring your tasks are executed swiftly and efficiently. 🚀
+It allows you to efficiently reuse pages or create new pages on demand, making your web automation tasks a breeze! ✨
+
+## Features 🌟
+
+- **🌐 The best tool for working across multiple pages**
+- 🏊‍♀️ Manages a pool of Playwright browser pages
+- 🔄 Supports reuse of pages for improved performance
+- 🆕 Creates new pages on demand when needed
+- 🚀 Utilizes asynchronous operations for efficient execution
+- 🔒 Ensures thread safety with semaphores and events
+- 🎨 Customizable page initialization with `page_initiator` callback
+- 🎯 Automatic closing of pages when the pool is no longer needed
+
+## Installation 🔧
+
+To start using Playwright Page Pool, simply install it via pip:
+
+```sh
+pip install playwright-page-pool
+```
+
+Make sure you have Playwright installed and set up in your project as well.
+
+## Usage 📝
+
+Here's a quick example of how to use Playwright Page Pool in your code:
+
+```python
+import asyncio
+
+from playwright.async_api import async_playwright
+from playwright_page_pool import PagePool
+
+async def run_example(pool: PagePool) -> None:
+    async with pool.acquire() as page:
+        await page.goto("https://example.com")
+        print(await page.title())
+
+async def main(*args, **kwargs) -> None:
+    async with async_playwright() as p:
+        browser = await p.chromium.launch()
+        context = await browser.new_context()
+
+        async with PagePool(context=context, reuse_pages=True) as pool:
+            run_examples = [run_example(pool) for _ in range(10)]
+            await asyncio.gather(*run_examples)  # 10 tasks are executed concurrently
+
+        await browser.close()
+
+
+if __name__ == "__main__":
+    asyncio.run(main())
+
+```
+
+In this example, we create a PagePool instance with a Playwright browser context. We set reuse_pages=True to enable page reuse for improved performance. We then define a run_example function that acquires a page from the pool using the acquire context manager, navigates to a URL, and prints the page title.
+Finally, we create 10 tasks using run_example and execute them concurrently using asyncio.gather. The PagePool manages the allocation and reuse of pages efficiently.
+
+## Configuration 🛠️
+
+When creating a PagePool instance, you can customize its behavior with the following parameters:
+
+- context: The Playwright browser context associated with the page pool.
+- max_pages: The maximum number of pages that can be opened at once. Defaults to the number of CPU cores.
+- page_initiator: An optional asynchronous callable that is called each time a new page is created. This allows you to perform custom initialization on each page.
+- reuse_pages: Determines whether pages should be reused. If False, a new page is created for each acquisition. Defaults to False. When set to True, it eliminates the overhead of opening and closing pages repeatedly, thereby improving performance.
+
+## Contributing 🤝
+
+Contributions to Playwright Page Pool are welcome! If you find any issues or have suggestions for improvements, please open an issue or submit a pull request on the GitHub repository.
+
+## License 📄
+
+This project is licensed under the MIT License. See the LICENSE file for more details.
+
+```
+
+
+## Metadata File: playwright_page_pool-0.0.1/pyproject.toml
+```
+[tool.poetry]
+name = "playwright-page-pool"
+version = "0.0.1"
+description = "Handle multiple playwright pages concurrently with ease and speed."
+authors = ["YeonGyu-Kim <code.yeon.gyu@gmail.com>"]
+license = "MIT License"
+readme = "README.md"
+repository = "https://github.com/code-yeongyu/playwright-page-pool"
+homepage = "https://github.com/code-yeongyu/playwright-page-pool"
+
+[tool.poetry.dependencies]
+python = "^3.8"
+playwright = "*"
+pip = "*"
+
+
+[tool.poetry.group.dev.dependencies]
+ruff = "^0.4.5"
+pyright = "^1.1.364"
+pytest = "7.4.4"
+pytest-sugar = "^1.0.0"
+pytest-it = "^0.1.5"
+pytest-asyncio = "^0.23.7"
+
+[tool.pytest.ini_options]
+python_files = ["tests/*.py"]
+addopts = """\
+    -n auto
+"""
+
+[tool.ruff]
+line-length = 119
+target-version = "py38"
+lint.select = ["UP", "Q", "I", "E", "W", "F", "PT", "PLE", "PLW", "C4"]
+
+[tool.pyright]
+typeCheckingMode = "strict"
+reportMissingTypeStubs = "none"
+reportMissingModuleSource = "warning"
+reportMissingImports = "information"
+reportGeneralTypeIssues = "error"
+
+
+[build-system]
+requires = ["poetry-core"]
+build-backend = "poetry.core.masonry.api"
+
+```

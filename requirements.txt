@@ -1,0 +1,25 @@
+# Core dependencies
+typer>=0.9.0
+rich>=13.4.2
+requests>=2.31.0
+beautifulsoup4>=4.12.2
+playwright>=1.40.0
+numpy>=1.24.0
+pandas>=2.0.0
+pydantic>=2.4.0
+
+# Optional dependencies (uncomment as needed)
+
+# MLX (Apple Silicon only)
+# mlx>=0.3.0
+# mlx-lm>=0.0.10
+# transformers>=4.35.0
+
+# MLX-TextGen
+# mlx-textgen>=0.1.0
+
+# Integrations
+# shot-scraper>=1.2.0
+# datasette>=0.64.3
+# finance-scrapers>=0.1.0
+# llama-index-mlx>=0.1.0 

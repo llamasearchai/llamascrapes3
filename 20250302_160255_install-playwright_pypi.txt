@@ -1,0 +1,287 @@
+# PyPI Package: install-playwright
+
+Version: 0.1.0
+Summary: Execute `playwright install` from Python
+Author: eggplants (w10776e8w@yahoo.co.jp)
+License: MIT
+Project URL: https://github.com/eggplants/install-playwright-python
+Repository: https://github.com/eggplants/install-playwright-python
+
+## Description
+
+# install-playwright-python
+
+[![PyPI version](
+  <https://badge.fury.io/py/install-playwright.svg>
+  )](
+  <https://badge.fury.io/py/install-playwright>
+) [![Maintainability](
+  <https://api.codeclimate.com/v1/badges/75293ef4c40e3382cfe8/maintainability>
+  )](
+  <https://codeclimate.com/github/eggplants/install-playwright-python/maintainability>
+) [![pre-commit.ci status](
+  <https://results.pre-commit.ci/badge/github/eggplants/install-playwright-python/master.svg>
+  )](
+  <https://results.pre-commit.ci/latest/github/eggplants/install-playwright-python/master>
+) [![Test Coverage](
+  <https://api.codeclimate.com/v1/badges/75293ef4c40e3382cfe8/test_coverage>
+  )](
+  <https://codeclimate.com/github/eggplants/install-playwright-python/test_coverage>
+) [![Test](
+  <https://github.com/eggplants/install-playwright-python/actions/workflows/test.yml/badge.svg>
+  )](
+  <https://github.com/eggplants/install-playwright-python/actions/workflows/test.yml>
+)
+
+Execute [`playwright install`](https://playwright.dev/python/docs/cli) from Python.
+
+```python
+from install_playwright import install
+```
+
+```python
+from playwright.sync_api import sync_playwright
+
+with sync_playwright() as p:
+    install(p.chrome)
+    browser = p.chrome.launch()
+    # ...
+```
+
+```python
+import asyncio
+from playwright.async_api import async_playwright
+
+async def main():
+    async with async_playwright() as p:
+        install(p.chrome)
+        browser = await p.chrome.launch()
+        # ...
+```
+
+## Install
+
+```bash
+pip install install-playwright
+```
+
+## License
+
+MIT
+
+
+## Dependencies
+
+- playwright<2.0,>=1.9
+
+
+## Classifiers
+
+- License :: OSI Approved :: MIT License
+- Programming Language :: Python
+- Programming Language :: Python :: 3
+- Programming Language :: Python :: 3 :: Only
+- Programming Language :: Python :: 3.10
+- Programming Language :: Python :: 3.11
+- Programming Language :: Python :: 3.12
+- Programming Language :: Python :: 3.8
+- Programming Language :: Python :: 3.9
+- Programming Language :: Python :: Implementation :: CPython
+
+
+## Package Content
+
+
+## File: install_playwright-0.1.0/install_playwright/__init__.py
+```python
+from __future__ import annotations
+
+import subprocess
+from typing import TYPE_CHECKING
+
+from playwright._impl._driver import compute_driver_executable, get_driver_env
+
+if TYPE_CHECKING:
+    from playwright.async_api import BrowserType as AsyncBrowserType
+    from playwright.sync_api import BrowserType as SyncBrowserType
+
+__version__ = "0.1.0"
+__all__ = ["install"]
+
+
+def install(
+    browser_type: SyncBrowserType | AsyncBrowserType,
+    *,
+    with_deps: bool = False,
+) -> bool:
+    """install playwright and deps if needed
+
+    Args:
+        browser_type (SyncBrowserType | AsyncBrowserType): `BrowserType` object. Example: `p.chrome`
+        with_deps (bool, optional): install with dependencies. Defaults to `False`.
+
+    Returns:
+        bool: succeeded or failed
+    """
+    driver_executable, driver_cli = compute_driver_executable()
+    args = [driver_executable, driver_cli, "install", browser_type.name]
+
+    if with_deps:
+        args.append("--with-deps")
+
+    proc = subprocess.run(args, env=get_driver_env(), capture_output=True, text=True, check=False)  # noqa: S603
+
+    return proc.returncode == 0
+
+```
+
+
+## Metadata File: install_playwright-0.1.0/README.md
+```
+# install-playwright-python
+
+[![PyPI version](
+  <https://badge.fury.io/py/install-playwright.svg>
+  )](
+  <https://badge.fury.io/py/install-playwright>
+) [![Maintainability](
+  <https://api.codeclimate.com/v1/badges/75293ef4c40e3382cfe8/maintainability>
+  )](
+  <https://codeclimate.com/github/eggplants/install-playwright-python/maintainability>
+) [![pre-commit.ci status](
+  <https://results.pre-commit.ci/badge/github/eggplants/install-playwright-python/master.svg>
+  )](
+  <https://results.pre-commit.ci/latest/github/eggplants/install-playwright-python/master>
+) [![Test Coverage](
+  <https://api.codeclimate.com/v1/badges/75293ef4c40e3382cfe8/test_coverage>
+  )](
+  <https://codeclimate.com/github/eggplants/install-playwright-python/test_coverage>
+) [![Test](
+  <https://github.com/eggplants/install-playwright-python/actions/workflows/test.yml/badge.svg>
+  )](
+  <https://github.com/eggplants/install-playwright-python/actions/workflows/test.yml>
+)
+
+Execute [`playwright install`](https://playwright.dev/python/docs/cli) from Python.
+
+```python
+from install_playwright import install
+```
+
+```python
+from playwright.sync_api import sync_playwright
+
+with sync_playwright() as p:
+    install(p.chrome)
+    browser = p.chrome.launch()
+    # ...
+```
+
+```python
+import asyncio
+from playwright.async_api import async_playwright
+
+async def main():
+    async with async_playwright() as p:
+        install(p.chrome)
+        browser = await p.chrome.launch()
+        # ...
+```
+
+## Install
+
+```bash
+pip install install-playwright
+```
+
+## License
+
+MIT
+
+```
+
+
+## Metadata File: install_playwright-0.1.0/pyproject.toml
+```
+[build-system]
+build-backend = "poetry.core.masonry.api"
+requires = [
+  "poetry-core",
+]
+
+[tool]
+[tool.poetry]
+authors = ["eggplants <w10776e8w@yahoo.co.jp>"]
+classifiers = [
+  "License :: OSI Approved :: MIT License",
+  "Programming Language :: Python",
+  "Programming Language :: Python :: 3",
+  "Programming Language :: Python :: 3 :: Only",
+  "Programming Language :: Python :: Implementation :: CPython",
+]
+description = "Execute `playwright install` from Python"
+keywords = ["playwright", "install", "browser"]
+name = "install_playwright"
+packages = [{include = "install_playwright"}]
+license = "MIT"
+readme = "README.md"
+repository = "https://github.com/eggplants/install-playwright-python"
+version = "0.1.0"
+
+[tool.poetry.dependencies]
+python = ">=3.8,<4"
+playwright = "^1.9"
+
+[tool.poetry.group.dev.dependencies]
+mypy = ">=0.991,<1.10"
+pre-commit = ">=2.20,<4.0"
+taskipy = "^1.10.3"
+pytest = ">=7.4.3,<9.0.0"
+pytest-cov = ">=4.1,<6.0"
+
+[tool.black]
+line-length = 120
+target-version = ['py39']
+
+[tool.ruff]
+select = ["ALL"]
+ignore = ["D", "ANN101"]
+line-length = 120
+
+[tool.ruff.mccabe]
+max-complexity = 18
+
+[tool.ruff.per-file-ignores]
+"main.py" = [
+  "T201", # `print` found
+]
+"tests/*test_*.py" = [
+  "INP001",  # File tests/test_*.py is part of an implicit namespace package. Add an __init__.py.
+  "S101", # Use of assert detected
+]
+
+[tool.mypy]
+pretty = true
+python_version = "3.9"
+show_error_codes = true
+strict = true
+
+[tool.pyright]
+pythonVersion = "3.9"
+typeCheckingMode = "strict"
+
+[tool.pytype]
+python_version = '3.10'
+jobs = '4'
+report_errors = true
+precise_return = true
+protocols = true
+strict_import = true
+
+[tool.taskipy.tasks]
+test = "pytest --cov=install_playwright --cov-report=term"
+"test:ci" = "task test --cov-report=xml:cov.xml"
+lint = "pre-commit run -a"
+profile = "python -m cProfile"
+
+```

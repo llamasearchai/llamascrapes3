@@ -1,0 +1,419 @@
+# PyPI Package: playwright-html-renderer
+
+Version: 0.3
+Summary: CLI tool to render HTML using Playwright
+Author: Stefan Kühnel
+License: European Union Public License 1.2
+Project URL: https://github.com/custom-packages/playwright-html-renderer
+Repository: https://github.com/custom-packages/playwright-html-renderer
+
+## Description
+
+# Playwright HTML Renderer
+
+[![PyPI](../../actions/workflows/pypi.yml/badge.svg)](../../actions/workflows/pypi.yml)
+
+Playwright HTML Renderer is a command-line interface (CLI) tool designed to render HTML using [Playwright](https://playwright.dev/python).
+
+## ⚙️ Installation
+
+You can install Playwright HTML Renderer via pip:
+
+```sh
+$ pip install playwright-html-renderer
+```
+
+## ⌨️ Usage
+
+Playwright HTML Renderer provides a simple command-line interface to render HTML content using Playwright. Here are some examples of how to use it:
+
+- Read HTML from a file and output rendered HTML to `STDOUT`:  
+  ```sh
+  $ playwright-html-renderer --html examples/input.html
+  ```
+
+- Read HTML from `STDIN` and output rendered HTML to a file:  
+  ```sh
+  $ cat examples/input.html | playwright-html-renderer --html - -o examples/output.html
+  ```
+
+- Read HTML from a file, wait for a specific CSS selector (`#navigation`), and output to `STDOUT`:  
+  ```sh
+  $ playwright-html-renderer --html examples/input.html -s "#navigation"
+  ```
+
+- Read HTML from a file, wait for multiple selectors (`#navigation`, `.main`), and output to a file:  
+  ```sh
+  $ playwright-html-renderer --html examples/input.html -s "#navigation" ".main" -o examples/output.html
+  ```
+
+For more information, you can also use the --help option:  
+
+```sh
+$ playwright-html-renderer --help
+```
+
+## 🔨 Technology
+
+The following technologies, tools and platforms were used during development.
+
+- **Code**: [Python](https://python.org)
+- **CI/CD**: [GitHub Actions](https://github.com/actions)
+
+## 🐛 Found a Bug?
+
+Thank you for your message! Please fill out a [bug report](../../issues/new?assignees=&labels=&template=bug_report.md&title=).
+
+## License
+
+This project is licensed under the [European Union Public License 1.2](https://choosealicense.com/licenses/eupl-1.2/).
+
+
+## Dependencies
+
+- playwright==1.44.0
+
+
+## Classifiers
+
+- Development Status :: 2 - Pre-Alpha
+- Intended Audience :: Developers
+- Intended Audience :: End Users/Desktop
+- Intended Audience :: Information Technology
+- License :: OSI Approved :: European Union Public Licence 1.2 (EUPL 1.2)
+- Natural Language :: English
+- Programming Language :: Python :: 3.10
+- Programming Language :: Python :: 3.11
+- Programming Language :: Python :: 3.12
+- Programming Language :: Python :: 3.13
+- Programming Language :: Python :: 3.8
+- Programming Language :: Python :: 3.9
+- Topic :: Internet :: WWW/HTTP :: Browsers
+
+
+## Package Content
+
+
+## File: playwright_html_renderer-0.3/playwright_html_renderer/__init__.py
+```python
+
+```
+
+
+## File: playwright_html_renderer-0.3/playwright_html_renderer/cli.py
+```python
+import argparse
+import sys
+
+from playwright.sync_api import sync_playwright
+
+
+VERSION = "0.3"
+
+
+def get_raw_html_content(filepath: str) -> str:
+    """Retrieve raw HTML content from a file or STDIN.
+
+    Args:
+        filepath: Path to the file containing HTML content, or '-' for STDIN.
+
+    Returns:
+        Raw HTML content as a string.
+    """
+    if filepath == "-":
+        sys.stdin.reconfigure(encoding="utf-8")
+        return sys.stdin.read()
+
+    with open(filepath, "r", encoding="utf-8") as file:
+        return file.read()
+
+
+def get_rendered_html_content(html_content: str, selectors: list = None) -> str:
+    """Render the HTML content in a headless browser and return the rendered HTML content.
+
+    Args:
+        html_content: The HTML content to render.
+        selectors: Optional list of CSS selectors to wait for before rendering.
+
+    Returns:
+        Rendered HTML content as a string.
+    """
+    with sync_playwright() as playwright:
+        with playwright.chromium.launch() as browser:
+            page = browser.new_page()
+            page.set_content(html_content)
+
+            if selectors:
+                for selector in selectors:
+                    page.wait_for_selector(selector)
+
+            rendered_html = page.content()
+    return rendered_html
+
+
+def save_rendered_html_content(html_content: str, filepath: str) -> None:
+    """Save the HTML content to a file or output it to STDOUT.
+
+    Args:
+        html_content: The HTML content to save or output.
+        filepath: Path to the output file, or '-' for STDOUT.
+    """
+    if filepath == "-":
+        sys.stdout.reconfigure(encoding="utf-8")
+        sys.stdout.write(html_content)
+    else:
+        with open(filepath, "w", encoding="utf-8") as file:
+            file.write(html_content)
+
+
+def cli() -> None:
+    """Parse command-line arguments and render the HTML content."""
+
+    parser = argparse.ArgumentParser(
+        description="Render HTML using Playwright",
+        formatter_class=argparse.RawDescriptionHelpFormatter,
+        epilog="""\
+Examples:
+  Read HTML from file and output rendered HTML to STDOUT:
+    $ playwright-html-renderer --html examples/input.html
+
+  Read HTML from STDIN and output rendered HTML to file:
+    $ cat examples/input.html | playwright-html-renderer --html - -o examples/output.html
+
+  Read HTML from file, wait for selector '#navigation', and output to STDOUT:
+    $ playwright-html-renderer --html examples/input.html -s "#navigation"
+
+  Read HTML from file, wait for multiple selectors, and output to file:
+    $ playwright-html-renderer --html examples/input.html -s "#navigation" ".main" -o examples/output.html
+""",
+    )
+    parser.add_argument(
+        "--html",
+        type=str,
+        required=True,
+        help="File containing HTML content, or '-' for STDIN",
+    )
+    parser.add_argument(
+        "-o", "--output", type=str, default="-", help="Output file, or '-' for STDOUT"
+    )
+    parser.add_argument(
+        "-s",
+        "--selectors",
+        nargs="+",
+        default=None,
+        help="Optional list of CSS selectors to wait for before rendering",
+    )
+    parser.add_argument(
+        "--version", "-v", action="version", version=f"%(prog)s {VERSION}"
+    )
+    args = parser.parse_args()
+
+    html_content = get_raw_html_content(filepath=args.html)
+    rendered_html_content = get_rendered_html_content(html_content, args.selectors)
+    save_rendered_html_content(rendered_html_content, args.output)
+
+```
+
+
+## File: playwright_html_renderer-0.3/playwright_html_renderer/__main__.py
+```python
+from .cli import cli
+
+if __name__ == "__main__":
+    cli()
+```
+
+
+## File: playwright_html_renderer-0.3/setup.py
+```python
+import io
+import os
+
+from setuptools import setup, find_packages
+
+VERSION = "0.3"
+
+
+def get_long_description():
+    with io.open(
+        os.path.join(os.path.dirname(os.path.abspath(__file__)), "README.md"),
+        encoding="utf8",
+    ) as fp:
+        return fp.read()
+
+
+setup(
+    name="playwright-html-renderer",
+    description="CLI tool to render HTML using Playwright",
+    long_description=get_long_description(),
+    long_description_content_type="text/markdown",
+    author="Stefan Kühnel",
+    version=VERSION,
+    readme="README.md",
+    license="European Union Public License 1.2",
+    url="https://github.com/custom-packages/playwright-html-renderer",
+    project_urls={
+        "Documentation": "https://github.com/custom-packages/playwright-html-renderer",
+        "Source code": "https://github.com/custom-packages/playwright-html-renderer",
+        "Issues": "https://github.com/custom-packages/playwright-html-renderer/issues",
+        "CI": "https://github.com/custom-packages/playwright-html-renderer/actions",
+    },
+    python_requires=">=3.8",
+    install_requires=["playwright==1.44.0"],
+    packages=find_packages(),
+    entry_points="""
+        [console_scripts]
+        playwright-html-renderer=playwright_html_renderer.cli:cli
+    """,
+    classifiers=[
+        "Development Status :: 2 - Pre-Alpha",
+        "Intended Audience :: Developers",
+        "Intended Audience :: End Users/Desktop",
+        "Intended Audience :: Information Technology",
+        "License :: OSI Approved :: European Union Public Licence 1.2 (EUPL 1.2)",
+        "Natural Language :: English",
+        "Programming Language :: Python :: 3.8",
+        "Programming Language :: Python :: 3.9",
+        "Programming Language :: Python :: 3.10",
+        "Programming Language :: Python :: 3.11",
+        "Programming Language :: Python :: 3.12",
+        "Programming Language :: Python :: 3.13",
+        "Topic :: Internet :: WWW/HTTP :: Browsers",
+    ],
+)
+
+```
+
+
+## Metadata File: playwright_html_renderer-0.3/README.md
+```
+# Playwright HTML Renderer
+
+[![PyPI](../../actions/workflows/pypi.yml/badge.svg)](../../actions/workflows/pypi.yml)
+
+Playwright HTML Renderer is a command-line interface (CLI) tool designed to render HTML using [Playwright](https://playwright.dev/python).
+
+## ⚙️ Installation
+
+You can install Playwright HTML Renderer via pip:
+
+```sh
+$ pip install playwright-html-renderer
+```
+
+## ⌨️ Usage
+
+Playwright HTML Renderer provides a simple command-line interface to render HTML content using Playwright. Here are some examples of how to use it:
+
+- Read HTML from a file and output rendered HTML to `STDOUT`:  
+  ```sh
+  $ playwright-html-renderer --html examples/input.html
+  ```
+
+- Read HTML from `STDIN` and output rendered HTML to a file:  
+  ```sh
+  $ cat examples/input.html | playwright-html-renderer --html - -o examples/output.html
+  ```
+
+- Read HTML from a file, wait for a specific CSS selector (`#navigation`), and output to `STDOUT`:  
+  ```sh
+  $ playwright-html-renderer --html examples/input.html -s "#navigation"
+  ```
+
+- Read HTML from a file, wait for multiple selectors (`#navigation`, `.main`), and output to a file:  
+  ```sh
+  $ playwright-html-renderer --html examples/input.html -s "#navigation" ".main" -o examples/output.html
+  ```
+
+For more information, you can also use the --help option:  
+
+```sh
+$ playwright-html-renderer --help
+```
+
+## 🔨 Technology
+
+The following technologies, tools and platforms were used during development.
+
+- **Code**: [Python](https://python.org)
+- **CI/CD**: [GitHub Actions](https://github.com/actions)
+
+## 🐛 Found a Bug?
+
+Thank you for your message! Please fill out a [bug report](../../issues/new?assignees=&labels=&template=bug_report.md&title=).
+
+## License
+
+This project is licensed under the [European Union Public License 1.2](https://choosealicense.com/licenses/eupl-1.2/).
+```
+
+
+## Metadata File: playwright_html_renderer-0.3/setup.py
+```
+import io
+import os
+
+from setuptools import setup, find_packages
+
+VERSION = "0.3"
+
+
+def get_long_description():
+    with io.open(
+        os.path.join(os.path.dirname(os.path.abspath(__file__)), "README.md"),
+        encoding="utf8",
+    ) as fp:
+        return fp.read()
+
+
+setup(
+    name="playwright-html-renderer",
+    description="CLI tool to render HTML using Playwright",
+    long_description=get_long_description(),
+    long_description_content_type="text/markdown",
+    author="Stefan Kühnel",
+    version=VERSION,
+    readme="README.md",
+    license="European Union Public License 1.2",
+    url="https://github.com/custom-packages/playwright-html-renderer",
+    project_urls={
+        "Documentation": "https://github.com/custom-packages/playwright-html-renderer",
+        "Source code": "https://github.com/custom-packages/playwright-html-renderer",
+        "Issues": "https://github.com/custom-packages/playwright-html-renderer/issues",
+        "CI": "https://github.com/custom-packages/playwright-html-renderer/actions",
+    },
+    python_requires=">=3.8",
+    install_requires=["playwright==1.44.0"],
+    packages=find_packages(),
+    entry_points="""
+        [console_scripts]
+        playwright-html-renderer=playwright_html_renderer.cli:cli
+    """,
+    classifiers=[
+        "Development Status :: 2 - Pre-Alpha",
+        "Intended Audience :: Developers",
+        "Intended Audience :: End Users/Desktop",
+        "Intended Audience :: Information Technology",
+        "License :: OSI Approved :: European Union Public Licence 1.2 (EUPL 1.2)",
+        "Natural Language :: English",
+        "Programming Language :: Python :: 3.8",
+        "Programming Language :: Python :: 3.9",
+        "Programming Language :: Python :: 3.10",
+        "Programming Language :: Python :: 3.11",
+        "Programming Language :: Python :: 3.12",
+        "Programming Language :: Python :: 3.13",
+        "Topic :: Internet :: WWW/HTTP :: Browsers",
+    ],
+)
+
+```
+
+
+## Metadata File: playwright_html_renderer-0.3/setup.cfg
+```
+[egg_info]
+tag_build = 
+tag_date = 0
+
+
+```

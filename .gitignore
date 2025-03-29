@@ -1,0 +1,25 @@
+# Python
+__pycache__/
+*.py[cod]
+*.pyo
+
+# Virtual environments
+.venv/
+
+# Distribution / packaging
+*.egg-info/
+
+# Backup files
+*.bak
+
+# Logs
+logs/
+*.log
+
+# IDE specific
+.vscode/
+.idea/
+
+# System files
+.DS_Store
+Thumbs.db 
