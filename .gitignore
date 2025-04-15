@@ -1,0 +1,252 @@
+# Python
+__pycache__/
+*.py[cod]
+*$py.class
+*.so
+.Python
+build/
+develop-eggs/
+dist/
+downloads/
+eggs/
+.eggs/
+lib/
+lib64/
+parts/
+sdist/
+var/
+wheels/
+*.egg-info/
+.installed.cfg
+*.egg
+
+# Unit test / coverage reports
+htmlcov/
+.tox/
+.coverage
+.coverage.*
+.cache
+nosetests.xml
+coverage.xml
+*.cover
+.hypothesis/
+.pytest_cache/
+
+# Jupyter Notebook
+.ipynb_checkpoints
+
+# Environments
+.env
+.venv
+env/
+venv/
+ENV/
+env.bak/
+venv.bak/
+
+# VS Code
+.vscode/
+
+# PyCharm
+.idea/
+
+# Mac
+.DS_Store
+
+# Project specific
+results/
+charts/
+reports/
+
+# IDE files
+*.swp
+*.swo
+*.swn
+*.bak
+*~
+
+# API keys and secrets
+.env
+.env.local
+*.pem
+*.key
+
+# Logs
+logs/
+*.log
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+
+# mypy
+.mypy_cache/
+.dmypy.json
+dmypy.json
+
+# Byte-compiled / optimized / DLL files
+__pycache__/
+*.py[cod]
+*$py.class
+
+# C extensions
+*.so
+
+# Distribution / packaging
+.Python
+build/
+dist/
+downloads/
+eggs/
+.eggs/
+lib/
+lib64/
+parts/
+sdist/
+var/
+wheels/
+*.egg-info/
+.installed.cfg
+*.egg
+MANIFEST
+
+# PyInstaller
+*.manifest
+*.spec
+
+# Installer logs
+pip-log.txt
+pip-delete-this-directory.txt
+
+# PyBuilder
+target/
+
+# Translations
+*.mo
+*.pot
+
+# Django stuff:
+*.log
+local_settings.py
+db.sqlite3
+
+# Flask stuff:
+instance/
+.webassets-cache
+
+# Scrapy stuff:
+.scrapy
+
+# Sphinx documentation
+docs/_build/
+
+# PyBuilder
+target/
+
+# IPython
+profile_default/
+ipython_config.py
+
+# pyenv
+.python-version
+
+# celery beat schedule file
+celerybeat-schedule.*
+
+# SageMath parsed files
+*.sage.py
+
+# Spyder project settings
+.spyderproject
+.spyproject
+
+# Rope project settings
+.ropeproject
+
+# mkdocs documentation
+/site
+
+# mypy
+.mypy_cache/
+.dmypy.json
+dmypy.json
+
+# Pyre type checker
+.pyre/
+
+# OS generated files
+.DS_Store
+.DS_Store?
+._*
+.Spotlight-V100
+.Trashes
+ehthumbs.db
+Thumbs.db
+
+# CodeQL
+.codeql_database/
+
+# Config files (ignore unless example)
+config/
+!config/*.example
+!config/*.toml
+
+# Env files
+.env
+.env.*
+!.env.example
+
+# History files
+key_rotation_history.json 
+# Updated in commit 7 - 2025-04-04 17:44:48
+
+# Updated in commit 15 - 2025-04-04 17:44:49
+
+# Updated in commit 23 - 2025-04-04 17:44:49
+
+# Updated in commit 7 - 2025-04-05 14:44:05
+
+# Updated in commit 15 - 2025-04-05 14:44:05
+
+# Updated in commit 23 - 2025-04-05 14:44:05
+
+# Updated in commit 7 - 2025-04-05 15:30:16
+
+# Updated in commit 15 - 2025-04-05 15:30:17
+
+# Updated in commit 23 - 2025-04-05 15:30:17
+
+# Updated in commit 7 - 2025-04-05 16:10:21
+
+# Updated in commit 15 - 2025-04-05 16:10:21
+
+# Updated in commit 23 - 2025-04-05 16:10:22
+
+# Updated in commit 7 - 2025-04-05 17:17:00
+
+# Updated in commit 15 - 2025-04-05 17:17:01
+
+# Updated in commit 23 - 2025-04-05 17:17:01
+
+# Updated in commit 7 - 2025-04-05 17:48:34
+
+# Updated in commit 15 - 2025-04-05 17:48:35
+
+# Updated in commit 23 - 2025-04-05 17:48:35
+
+# Updated in commit 7 - 2025-04-05 18:38:17
+
+# Updated in commit 15 - 2025-04-05 18:38:17
+
+# Updated in commit 23 - 2025-04-05 18:38:17
+
+# Updated in commit 7 - 2025-04-05 18:49:59
+
+# Updated in commit 15 - 2025-04-05 18:50:00
+
+# Updated in commit 23 - 2025-04-05 18:50:00
+
+# Updated in commit 7 - 2025-04-05 19:12:17
+
+# Updated in commit 15 - 2025-04-05 19:12:17
+
+# Updated in commit 23 - 2025-04-05 19:12:17
